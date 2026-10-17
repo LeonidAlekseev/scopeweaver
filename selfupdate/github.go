@@ -13,7 +13,9 @@ import (
 
 // Repo is the fixed release source. Making it configurable would grant anyone
 // who can edit configuration a remote-code-execution path, which is unacceptable here.
-const Repo = "cskwork/scopeweaver"
+// It points at this fork, not upstream cskwork/scopeweaver: an upstream release would
+// replace the binary and drop the fork's changes.
+const Repo = "LeonidAlekseev/scopeweaver"
 
 // latestURL is GitHub's latest stable release endpoint; prereleases and drafts are skipped.
 const latestURL = "https://api.github.com/repos/" + Repo + "/releases/latest"
