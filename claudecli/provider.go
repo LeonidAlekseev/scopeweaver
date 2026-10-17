@@ -208,8 +208,17 @@ func buildSystem(req llm.CompletionRequest) string {
 	if len(req.Tools) == 0 {
 		return b.String()
 	}
-	b.WriteString("## Tools\n")
-	b.WriteString("You have no native tools in this session; never attempt a direct tool call. You cannot execute tools yourself. To use one, put a call in tool_calls with a unique id, the exact tool name, and an input object matching its input_schema. The host runs it and returns the result in the next turn. Use only the tools listed here. Put any visible reply in text. When no tool is needed, return an empty tool_calls array.\n\n")
+	// This process has NO tool runtime: the CLI's own tools are disabled (--tools "")
+	// and the calls below are host tools the CLI cannot see. Larger Claude models still
+	// reflexively emit a native tool_use, which the CLI rejects with "No such tool
+	// available" and then loops uselessly. Framing the turn as a JSON-only endpoint with
+	// a worked example makes every model route calls through tool_calls instead; this
+	// wording was verified to stop the native-call loop on the default (large) model.
+	b.WriteString("## How to act\n")
+	b.WriteString("You are a JSON-only planning endpoint. You have NO ability to execute anything: there is no tool runtime in this process. The ONLY thing you can do is return a single JSON object matching the output schema. Any call you want to run must be an entry in the tool_calls array; a separate host process reads your JSON, runs the call, and sends you the result in a later request. If you emit a native tool invocation it is silently discarded and the user sees nothing. Put any visible reply in text. When no call is needed, return an empty tool_calls array.\n\n")
+	b.WriteString("Example of a correct response (the ONLY shape allowed):\n")
+	b.WriteString(`{"text":"Looking up the record.","tool_calls":[{"id":"c1","name":"example_call","input":{"key":"value"}}]}` + "\n\n")
+	b.WriteString("## Available calls (names for the tool_calls array, NOT native tools)\n")
 	for _, t := range req.Tools {
 		schema, _ := json.Marshal(t.InputSchema)
 		fmt.Fprintf(&b, "### %s\n%s\ninput_schema: %s\n\n", t.Name, t.Description, schema)
