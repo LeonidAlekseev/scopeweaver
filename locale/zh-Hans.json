@@ -1582,6 +1582,7 @@
   "cleanup renamed vars: %w": "清理已重命名的变量：%w",
   "seed interactive_shell defaults: %w": "播种 interactive_shell 默认值：%w",
   "seed browser mcp: %w": "播种 browser mcp：%w",
+  "migrate browser mcp to camoufox: %w": "将 browser mcp 迁移到 Camoufox：%w",
   "seed skill visibility: %w": "播种技能可见性：%w",
   "seed intercept rules: %w": "播种拦截规则：%w",
   "seed intercept rules v2: %w": "播种拦截规则 v2：%w",

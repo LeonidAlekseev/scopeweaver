@@ -258,6 +258,7 @@ func init() {
 	Register("cleanup renamed vars: %w", "cleanup renamed vars: %w", "이름이 변경된 변수 정리 실패: %w")
 	Register("seed interactive_shell defaults: %w", "seed interactive_shell defaults: %w", "interactive_shell 기본값 초기화 실패: %w")
 	Register("seed browser mcp: %w", "seed browser mcp: %w", "브라우저 MCP 초기화 실패: %w")
+	Register("migrate browser mcp to camoufox: %w", "migrate browser mcp to camoufox: %w", "브라우저 MCP Camoufox 마이그레이션 실패: %w")
 	Register("seed skill visibility: %w", "seed skill visibility: %w", "스킬 공개 범위 초기화 실패: %w")
 	Register("seed intercept rules: %w", "seed intercept rules: %w", "차단 규칙 초기화 실패: %w")
 	Register("seed intercept rules v2: %w", "seed intercept rules v2: %w", "차단 규칙 v2 초기화 실패: %w")

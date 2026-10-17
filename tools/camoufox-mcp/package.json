@@ -1,0 +1,11 @@
+{
+  "name": "camoufox-mcp",
+  "private": true,
+  "description": "Playwright MCP driving Camoufox (anti-detect Firefox) for the built-in browser MCP",
+  "type": "module",
+  "dependencies": {
+    "@playwright/mcp": "0.0.83",
+    "camoufox-js": "0.13.0",
+    "playwright-core": "1.62.0"
+  }
+}

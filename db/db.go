@@ -208,6 +208,15 @@ var builtinAgents = []builtinAgent{
 
 // seedBuiltins inserts built-ins and updates only exact bundled metadata defaults.
 // Localization must never overwrite customized names, descriptions, or examples.
+// browserMCPCommand/browserMCPArgs launch Playwright MCP on Camoufox through the
+// wrapper the Docker image installs at /opt/camoufox-mcp (tools/camoufox-mcp). Camoufox
+// runs headed, so xvfb-run -a gives each instance its own display. Firefox ignores
+// NODE_EXTRA_CA_CERTS, so --ignore-https-errors is what lets it through the capture MITM.
+const (
+	browserMCPCommand = "xvfb-run"
+	browserMCPArgs    = `["-a","node","/opt/camoufox-mcp/wrap.mjs","--ignore-https-errors"]`
+)
+
 func (d *DB) seedBuiltins() error {
 	for _, a := range builtinAgents {
 		var agentID int64
@@ -250,17 +259,33 @@ ON CONFLICT (agent_id, var_name) DO UPDATE SET
 		}
 		_ = d.SetSetting("interactive_shell_default_v1", "true")
 	}
-	// Seed the built-in browser (Playwright) MCP once — DISABLED by default (users
-	// enable it when needed), no proxy by default. The traffic-capture toggle injects/strips
-	// the recording proxy + CA at runtime (server.Manager.syncBrowserMCPProxy).
+	// Seed the built-in browser (Playwright on Camoufox) MCP once — DISABLED by default
+	// (users enable it when needed), no proxy by default. The traffic-capture toggle
+	// injects/strips the recording proxy + CA at runtime (server.Manager.syncBrowserMCPProxy).
 	// Insert only if absent so we never clobber user edits (args/env/enabled/
 	// visibility) on restart.
 	if _, err := d.Exec(`
 INSERT INTO mcp_servers(name, transport, command, args, env, enabled)
-VALUES ('browser', 'stdio', 'npx', $1, '{}', false)
+VALUES ('browser', 'stdio', $1, $2, '{}', false)
 ON CONFLICT (name) DO NOTHING`,
-		`["@playwright/mcp","--headless"]`); err != nil {
+		browserMCPCommand, browserMCPArgs); err != nil {
 		return locale.Errorf("seed browser mcp: %w", err)
+	}
+	// Move a browser MCP still on the old Chromium default (npx @playwright/mcp --headless,
+	// possibly with the capture proxy appended) to Camoufox ONCE — guarded by a settings
+	// flag so a user who later switches back keeps their choice. Edited rows never match.
+	// Proxy args are dropped here; syncBrowserMCPProxy re-adds them at startup if capture is on.
+	if v, _, _ := d.GetSetting("browser_mcp_camoufox_v1"); v != "true" {
+		if _, err := d.Exec(`
+UPDATE mcp_servers SET command = $1, args = $2
+WHERE name = 'browser' AND command = 'npx'
+  AND args->>0 = '@playwright/mcp' AND args->>1 = '--headless'
+  AND (jsonb_array_length(args) = 2
+       OR (jsonb_array_length(args) = 4 AND args->>2 = '--proxy-server'))`,
+			browserMCPCommand, browserMCPArgs); err != nil {
+			return locale.Errorf("migrate browser mcp to camoufox: %w", err)
+		}
+		_ = d.SetSetting("browser_mcp_camoufox_v1", "true")
 	}
 	// NOTE: the placeholder ScopeSentry data-source MCP (empty URL + empty X-API-Key,
 	// disabled) is seeded directly in schema.sql §F so a raw `psql < schema.sql` init
