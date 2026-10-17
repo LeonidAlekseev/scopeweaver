@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Autumn-27/artex/claudecli"
 	runtimeconfig "github.com/Autumn-27/artex/config"
 	"github.com/Autumn-27/artex/llmnet"
 	"github.com/Autumn-27/artex/llmrec"
@@ -30,6 +31,9 @@ import (
 	acperm "github.com/Autumn-27/norma/permission"
 	"github.com/Autumn-27/norma/transcript"
 )
+
+// ClaudeCLIProvider is the provider name for the local Claude Code CLI backend.
+const ClaudeCLIProvider = "claude-cli"
 
 // Config describes the LLM backend resolved from the environment.
 type Config struct {
@@ -224,6 +228,14 @@ func ConfigFrom(provider, model, baseURL, apiKey, proxy string) Config {
 		Stream:  true, // Streaming defaults on; callers override from the profile.
 	}
 	switch strings.TrimSpace(provider) {
+	case ClaudeCLIProvider:
+		// Runs the local Claude Code CLI with its subscription login; no key or endpoint.
+		c.Format = llm.Format(ClaudeCLIProvider)
+		c.BaseURL = ""
+		c.APIKey = ""
+		if c.Model == "" {
+			c.Model = "claude-sonnet-5-5"
+		}
 	case "ollama":
 		c.Format = llm.Format("ollama")
 		c.BaseURL = ollama.NormalizeBaseURL(c.BaseURL)
@@ -273,6 +285,8 @@ func (c Config) Provider() string {
 	switch c.Format {
 	case llm.Format("ollama"):
 		return "ollama"
+	case llm.Format(ClaudeCLIProvider):
+		return ClaudeCLIProvider
 	case llm.FormatOpenAI:
 		return "openai"
 	case llm.FormatOpenAIResponses:
@@ -288,6 +302,9 @@ func (c Config) NewProvider() (llm.Provider, error) {
 	client, err := c.HTTPClient()
 	if err != nil {
 		return nil, err
+	}
+	if c.Provider() == ClaudeCLIProvider {
+		return llm.RateLimited(claudecli.New(claudecli.Options{Model: c.Model}), llm.RateLimit{PerSecond: c.RatePerSecond, PerMinute: c.RatePerMinute}), nil
 	}
 	if c.Provider() == "ollama" {
 		native, err := ollama.NewClient(c.BaseURL, c.APIKey, client)
@@ -480,7 +497,7 @@ func requestBodySnapshot(req *http.Request) string {
 
 // Ready allows keyless native Ollama and explicit local compatible servers.
 func (c Config) Ready() bool {
-	return c.APIKey != "" || c.Provider() == "ollama" || llmnet.IsLocalEndpoint(c.BaseURL)
+	return c.APIKey != "" || c.Provider() == "ollama" || c.Provider() == ClaudeCLIProvider || llmnet.IsLocalEndpoint(c.BaseURL)
 }
 
 // HTTPClient is shared by inference, metadata, diagnostics, and judge consumers.

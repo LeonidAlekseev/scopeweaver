@@ -46,11 +46,13 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "8787:8787"
+      - "127.0.0.1:8789:8787"
       - "127.0.0.1:8788:8788"
     volumes:
       - ./data:/app/data
       - ./skills:/app/skills
+      # Claude Code login for the claude-cli provider; set CLAUDE_CREDENTIALS_FILE in .env.
+      - ${CLAUDE_CREDENTIALS_FILE:-/dev/null}:/root/.claude/.credentials.json
     restart: unless-stopped
 
   ollama:

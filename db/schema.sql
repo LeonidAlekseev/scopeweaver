@@ -362,7 +362,7 @@ CREATE TABLE IF NOT EXISTS settings (
 CREATE TABLE IF NOT EXISTS llm_profiles (
     id               BIGSERIAL PRIMARY KEY,
     name             TEXT NOT NULL UNIQUE,
-    format           TEXT NOT NULL CHECK (format IN ('openai','anthropic','openai-responses','ollama')),
+    format           TEXT NOT NULL CHECK (format IN ('openai','anthropic','openai-responses','ollama','claude-cli')),
     base_url         TEXT,
     proxy            TEXT,
     model            TEXT NOT NULL,
@@ -415,11 +415,11 @@ ALTER TABLE llm_profiles ADD COLUMN IF NOT EXISTS priority     INTEGER NOT NULL 
 ALTER TABLE llm_profiles ADD COLUMN IF NOT EXISTS pool_exclude BOOLEAN NOT NULL DEFAULT false;
 -- Add streaming switch to older databases; default true preserves streaming transparently.
 ALTER TABLE llm_profiles ADD COLUMN IF NOT EXISTS streaming    BOOLEAN NOT NULL DEFAULT true;
--- Expand format constraints to include openai-responses (OpenAI Responses API) for older databases.
+-- Expand format constraints to include openai-responses (OpenAI Responses API) and claude-cli for older databases.
 -- Idempotent on every startup: drop the old CHECK and recreate with all supported values.
 ALTER TABLE llm_profiles DROP CONSTRAINT IF EXISTS llm_profiles_format_check;
 ALTER TABLE llm_profiles ADD  CONSTRAINT llm_profiles_format_check
-    CHECK (format IN ('openai','anthropic','openai-responses','ollama'));
+    CHECK (format IN ('openai','anthropic','openai-responses','ollama','claude-cli'));
 
 -- Native Ollama options are additive; cloud profiles retain their existing defaults.
 ALTER TABLE llm_profiles ADD COLUMN IF NOT EXISTS keep_alive TEXT NOT NULL DEFAULT '';

@@ -1999,7 +1999,7 @@ func (s *Server) pgLLMPoolReset(w http.ResponseWriter, r *http.Request) {
 // the OpenAI path, it falls back to the OpenAI endpoint at the stripped root.
 func (s *Server) pgListModels(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Provider  string `json:"provider"` // "openai" | "anthropic"
+		Provider  string `json:"provider"` // "openai" | "anthropic" | "claude-cli"
 		BaseURL   string `json:"base_url"`
 		APIKey    string `json:"api_key"`
 		Proxy     string `json:"proxy"`
@@ -2021,6 +2021,11 @@ func (s *Server) pgListModels(w http.ResponseWriter, r *http.Request) {
 	cfg := s.applyLLMPolicy(agent.ConfigFrom(req.Provider, "", req.BaseURL, apiKey, req.Proxy))
 	if req.Provider == "ollama" {
 		s.listOllamaModels(w, r, cfg)
+		return
+	}
+	if cfg.Provider() == agent.ClaudeCLIProvider {
+		// The CLI exposes no model list; offer the Claude 5.5 family and accept any id typed in.
+		writeJSON(w, 200, map[string]any{"ok": true, "models": []string{"claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"}})
 		return
 	}
 	if !cfg.Ready() {

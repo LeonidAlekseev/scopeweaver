@@ -32,6 +32,8 @@ RUN npm install -g @playwright/mcp@latest @playwright/cli@latest playwright@late
     && playwright-cli --help \
     && playwright install --with-deps chromium \
     && rm -rf /var/lib/apt/lists/*
+# Claude Code CLI backs the claude-cli LLM provider; it reads the login mounted by docker-compose.
+RUN npm install -g @anthropic-ai/claude-code@latest && claude --version
 WORKDIR /app
 COPY --from=backend /scopeweaver /app/scopeweaver
 # The supervisor forwards SIGTERM and restarts after a self-update.

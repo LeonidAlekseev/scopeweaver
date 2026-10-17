@@ -63,7 +63,7 @@ const MAX_TOKENS_FIELD_HINTS: Record<string, string> = {
   get ollama() { return swt("providers.maxTokensFieldOllama"); },
 };
 type ProfileFormat = LLMProfile["format"];
-const FORMATS: readonly string[] = ["anthropic", "openai", "openai-responses", "ollama"];
+const FORMATS: readonly string[] = ["anthropic", "openai", "openai-responses", "ollama", "claude-cli"];
 const ZAI_PRESETS = ["zai-general", "zai-coding-reference"] as const;
 const CLOUD_PRESETS = [
   { id: "deepseek", key: "providers.deepseek", help: "providers.deepseekHelp" },
@@ -107,7 +107,7 @@ function cooldownText(secs: number) {
 // other states come from rotation circuit records. With rotation off, Healthy means no known failures.
 type Health = { label: string; cls: string; hint?: string };
 // Older servers omit api_key_optional; native Ollama was their only keyless format.
-const keyOptional = (p: LLMProfile) => p.api_key_optional ?? p.format === "ollama";
+const keyOptional = (p: LLMProfile) => p.api_key_optional ?? (p.format === "ollama" || p.format === "claude-cli");
 function healthOf(p: LLMProfile, m?: LLMPoolMember): Health {
   if (!p.api_key_hint && !keyOptional(p)) {
     return {
@@ -457,6 +457,12 @@ function ProfileSheet({
   function changeFormat(nextFormat: ProfileFormat) {
     invalidateModels();
     setFormat(nextFormat);
+    if (nextFormat === "claude-cli") {
+      // The CLI takes no endpoint or key; it uses the local Claude Code login.
+      setBaseUrl("");
+      setApiKey("");
+      if (!model.trim()) setModel("claude-sonnet-5-5");
+    }
     if (nextFormat === "ollama" && format !== "ollama") {
       // Drop a cloud template's URL and credential before read-only local discovery.
       const cloudTemplateURL = preset && !isOllamaPreset(preset)
@@ -562,9 +568,9 @@ function ProfileSheet({
         name: name.trim(),
         format,
         model: model.trim(),
-        base_url: baseUrl.trim(),
+        base_url: format === "claude-cli" ? "" : baseUrl.trim(),
         proxy: proxy.trim(),
-        api_key: apiKey,
+        api_key: format === "claude-cli" ? "" : apiKey,
         rate_per_second: Number(rps) || 0,
         rate_per_minute: Number(rpm) || 0,
         context_window_k: Number(cw) || 0,
@@ -694,6 +700,7 @@ function ProfileSheet({
                   <SelectItem value="openai">OpenAI (Chat Completions)</SelectItem>
                   <SelectItem value="openai-responses">OpenAI (Responses API)</SelectItem>
                   <SelectItem value="ollama">{swt("providers.ollamaFormat")}</SelectItem>
+                  <SelectItem value="claude-cli">Claude Code CLI (subscription login)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -776,6 +783,7 @@ function ProfileSheet({
             )}
           </div>
 
+          {format !== "claude-cli" && (
           <div className="grid gap-2">
             <Label htmlFor="p-base-url">{swt("interface.m1391")}</Label>
             <Input
@@ -786,6 +794,7 @@ function ProfileSheet({
               onChange={(e) => { invalidateModels(); setBaseUrl(e.target.value); }}
             />
           </div>
+          )}
 
           <div className="grid gap-2">
             <Label htmlFor="p-proxy">{swt("interface.m1392")}</Label>
@@ -813,6 +822,7 @@ function ProfileSheet({
               {swt("interface.m1396")}<b>{swt("interface.m1397")}</b>{swt("interface.m1398")}</p>
           </div>
 
+          {format !== "claude-cli" && (
           <div className="grid gap-2">
             <Label htmlFor="p-api-key">{swt("english.e100")}</Label>
             <Input
@@ -824,6 +834,7 @@ function ProfileSheet({
             />
             {format === "ollama" && <p className="text-muted-foreground text-xs">{swt("providers.ollamaKeyHelp")}</p>}
           </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="grid gap-2">
