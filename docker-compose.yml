@@ -43,6 +43,9 @@ services:
       SCOPEWEAVER_LLM_MAX_CONCURRENT: ${SCOPEWEAVER_LLM_MAX_CONCURRENT:-${ARTEX_LLM_MAX_CONCURRENT:-}}
       SCOPEWEAVER_LOCAL_LLM_ONLY: ${SCOPEWEAVER_LOCAL_LLM_ONLY:-${ARTEX_LOCAL_LLM_ONLY:-false}}
       SCOPEWEAVER_LOCAL_LLM_ALLOWED_CIDRS: ${SCOPEWEAVER_LOCAL_LLM_ALLOWED_CIDRS:-${ARTEX_LOCAL_LLM_ALLOWED_CIDRS:-}}
+      # Long-lived token from `claude setup-token` for the claude-cli provider. A dedicated
+      # token avoids sharing a rotating OAuth refresh token with the host CLI.
+      CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OAUTH_TOKEN:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -51,8 +54,6 @@ services:
     volumes:
       - ./data:/app/data
       - ./skills:/app/skills
-      # Claude Code login for the claude-cli provider; set CLAUDE_CREDENTIALS_FILE in .env.
-      - ${CLAUDE_CREDENTIALS_FILE:-/dev/null}:/root/.claude/.credentials.json
     restart: unless-stopped
 
   ollama:
