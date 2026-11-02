@@ -10,7 +10,11 @@ LLM 멀티 에이전트 기반 자율 침투 테스트 시스템 (Go 백엔드 +
 
 ---
 
-> **이 프로젝트에 대하여.** ScopeWeaver는 [Autumn-27/ARTEX](https://github.com/Autumn-27/ARTEX)의
+> **이 포크.** 이것은 [cskwork/scopeweaver](https://github.com/cskwork/scopeweaver)의 **ScopeWeaver 포크**로,
+> **Claude Code CLI LLM 프로바이더**와 내장 브라우저 MCP용 **Camoufox 안티 디텍트 브라우저**를 추가했습니다.
+> `feat(llm): add claude-cli provider…` 및 `feat(browser): run built-in browser MCP on Camoufox…` 커밋을 참고하세요.
+
+> **업스트림 프로젝트에 대하여.** ScopeWeaver는 [Autumn-27/ARTEX](https://github.com/Autumn-27/ARTEX)의
 > 커밋 `160fe13`을 바탕으로 만든 독립 파생 프로젝트입니다. 원본 코드와 아키텍처를 유지하면서
 > 제품 이름, 영어/한국어 화면과 메시지, 문서, 배포 대상을 변경합니다.
 > 변경 날짜는 **2026-10-02**이며 릴리스 태그가 아닙니다.

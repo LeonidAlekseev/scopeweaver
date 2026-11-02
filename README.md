@@ -10,7 +10,11 @@ English · [한국어](README.ko.md)
 
 ---
 
-> **About this project.** ScopeWeaver is a derivative of [Autumn-27/ARTEX](https://github.com/Autumn-27/ARTEX),
+> **This fork.** This is a **ScopeWeaver fork** of [cskwork/scopeweaver](https://github.com/cskwork/scopeweaver)
+> with a **Claude Code CLI LLM provider** and a **Camoufox anti-detect browser** for the built-in browser MCP.
+> See the `feat(llm): add claude-cli provider…` and `feat(browser): run built-in browser MCP on Camoufox…` commits.
+
+> **About the upstream project.** ScopeWeaver is a derivative of [Autumn-27/ARTEX](https://github.com/Autumn-27/ARTEX),
 > rebranded and translated into English and Korean. It is built from upstream commit `160fe13`.
 
 Modification date: **2026-10-02**. See [provenance and changes](docs/PROVENANCE.md); this is not a release tag.
